@@ -1,51 +1,51 @@
 <?php
 
-$myNews = new News();
+$myNews = new NewsFeed();
 
 echo '<pre>';
 echo var_dump($myNews);
 echo '</pre>';
 
-class News
+class NewsFeed
 {
-	 public $NewsID = 1;
-	 public $Title = "";
-	 public $Description = "";
-     public $DateAdded = "";
-     public $LastUpdated = "";
-	 public $isValid = FALSE;
+    public $NewsID = 0;
+    public $Title = "";
+    public $Description = "";
+    public $DateAdded = "";
+    public $LastUpdated = "";
+    public $isValid = FALSE;
 	
 	/**
-	 * Constructor for News class. 
+	 * Constructor for NewsFeed class. 
 	 *
 	 * @param integer $id The unique ID number of the Survey
 	 * @return void 
 	 * @todo none
 	 */ 
     function __construct($id)
-	{#constructor sets stage by adding data to an instance of the object
-		$this->NewsID = (int)$id;
-		if($this->NewsID == 0){return FALSE;}
+    {#constructor sets stage by adding data to an instance of the object
+        $this->NewsID = (int)$id;
+        if($this->NewsID == 0){return FALSE;}
 		
-		#get Survey data from DB
-		$sql = sprintf("select Title, Description, DateAdded, LastUpdated from " . PREFIX . "News Where NewsID =%d",$this->NewsID);
+        #get Survey data from DB
+        $sql = sprintf("select Title, Description, DateAdded, LastUpdated from " . PREFIX . "News Where NewsID =%d",$this->NewsID);
 		
-		#in mysqli, connection and query are reversed!  connection comes first
-		$result = mysqli_query(\IDB::conn(),$sql) or die(trigger_error(mysqli_error(\IDB::conn()), E_USER_ERROR));
-		if (mysqli_num_rows($result) > 0)
-		{
-			$this->isValid = TRUE;
-			while ($row = mysqli_fetch_assoc($result))
-			{#dbOut() function is a 'wrapper' designed to strip slashes, etc. of data leaving db
-			     $this->Title = dbOut($row['Title']);
-			     $this->Description = dbOut($row['Description']);
-                 $this->DateAdded = dbOut($row['DateAdded']);
-                 $this->LastUpdated = dbOut($row['LastUpdated']);
-			}
-		}
-		@mysqli_free_result($result); #free resources
+        #in mysqli, connection and query are reversed!  connection comes first
+        $result = mysqli_query(\IDB::conn(),$sql) or die(trigger_error(mysqli_error(\IDB::conn()), E_USER_ERROR));
+        if (mysqli_num_rows($result) > 0)
+        {
+            $this->isValid = TRUE;
+            while ($row = mysqli_fetch_assoc($result))
+            {#dbOut() function is a 'wrapper' designed to strip slashes, etc. of data leaving db
+                $this->Title = dbOut($row['Title']);
+                $this->Description = dbOut($row['Description']);
+                $this->DateAdded = dbOut($row['DateAdded']);
+                $this->LastUpdated = dbOut($row['LastUpdated']);
+            }
+        }
+        @mysqli_free_result($result); #free resources
 		
-		if(!$this->isValid){return;}  #exit, as News Article is not valid
+        if(!$this->isValid){return;}  #exit, as News Article is not valid
         
     }#end of News Constructor
 }
