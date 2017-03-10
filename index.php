@@ -19,19 +19,6 @@
 require '../inc_0700/config_inc.php'; #provides configuration, pathing, error handling, db
 require './_inc/common-inc.php'; #provides configuration, pathing, error handling, db
 
-require './_inc/aarFeeds-inc.php'; #arrays containing feeds
-
-
-#note aliasing to make admin name using concat
-$sql = "
- SELECT CONCAT(a.FirstName, ' ', a.LastName) AdminName,
-
- s.SurveyID, s.Title, s.Description,  date_format(s.DateAdded, '%W %D %M %Y %H:%i') 'DateAdded'
-
- FROM wn17_surveys AS s, wn17_Admin AS a
- WHERE s.AdminID=a.AdminID
- ORDER BY s.DateAdded DESC
- ";
 
 #Fills <title> tag. If left empty will default to $PageTitle in config_inc.php
 $config->titleTag = 'P3: News Aggregator';
@@ -47,90 +34,33 @@ get_header(); #defaults to theme header or header_inc.php
 <h3 class="text-center">P3: Entertainment News Aggregator</h3>
 
 <h4 class="text-center">News Syndication, Categorization and Caching </h4>
-Build a PHP application providing categorized news pages from syndicated RSS feeds. These pages must come from feed data stored in a database.  The feed data must be cached on a session level so news pages generated during a current session are stored so the data does not need to be retrieved from the remote survey beyond the first page hit.
+<p>Build a PHP application providing categorized news pages from syndicated RSS feeds. These pages must come from feed data stored in a database.  The feed data must be cached on a session level so news pages generated during a current session are stored so the data does not need to be retrieved from the remote survey beyond the first page hit.
 </p>
 
 
 <?php
-// pager added for future reference
-
-	#reference images for pager
-	$prev = '<img src="' . VIRTUAL_PATH . 'images/arrow_prev.gif" border="0" />';
-	$next = '<img src="' . VIRTUAL_PATH . 'images/arrow_next.gif" border="0" />';
-
-	# Create instance of new 'pager' class
-	$myPager = new Pager(2,'',$prev,$next,'');
-	$sql = $myPager->loadSQL($sql);  #load SQL, add offset
-
-	# connection comes first in mysqli (improved) function
+  //sql statment to select individual item - categoryID and Category Title.
+    $sql = "
+        select
+            CategoryID,
+            CategoryTitle
+        from
+            p3_Categories
+    ";
+    #IDB::conn() creates a shareable database connection via a singleton class
 	$result = mysqli_query(IDB::conn(),$sql) or die(trigger_error(mysqli_error(IDB::conn()), E_USER_ERROR));
-
-	if(mysqli_num_rows($result) > 0)
-	{#records exist - process
-		#process via foreach loop
-
-		#process the feeds
-		$feedID = 0;
-		foreach($syfyFeed as $feed){
-			# test feeds inputting
-			// echo $feed . '<br />';
-
-			#call feed
-			echo mk_link($feed, $feedID);
-			#echo gt_FeedLnk($feed, $str='');
-
-			$feedID++;
-
-		}	#END foreach
-	} #END if
+    #there are records: process - present data
+    if(mysqli_num_rows($result) > 0) {# process each row
+        while ($row = mysqli_fetch_assoc($result)) {# pull data from associative array
+          echo '<a class="btn btn-primary" role="button" href="./category_view.php?categoryID=' . $row['CategoryID'] . '">'
+        . $row['CategoryTitle'] . '</a>&nbsp;';
+        }
+    }
+    @mysqli_free_result($result);
 
 
 
 
-
-/*
-	if($myPager->showTotal()==1){$itemz = "survey";}else{$itemz = "surveys";}  //deal with plural
-	echo '<div align="center">We have ' . $myPager->showTotal() . ' ' . $itemz . '!</div>';
-
-		// loop to apply to all initial feeds...
-		while($row = mysqli_fetch_assoc($result))
-		{# process each row
-
-			//collect survey data to create loaded query link with
-			$surveyID    = (int)$row['SurveyID'];
-			$surveyTitle = dbOut($row['Title']);
-			$surveyAdded = dbOut($row['DateAdded']);
-
-			$fullName    = dbOut($row['AdminName']); // name made in db via concatination
-
-			#$dateCreated = number_format((float)$row['Price'],2);
-
-			echo '
-				<tr>
-					<td align="center">' . $surveyID . '</td>
-					<td><a href="' . VIRTUAL_PATH . 'surveys/survey_view.php?id=' . $surveyID . '">' . $surveyTitle . '</a></td>
-					<td>' . $fullName . '</td>
-					<td>' . $surveyAdded . '</td>
-				</tr>
-			';
-		}
-
-		#END table
-		echo '
-			</tbody>
-		</table>
-		';
-
-				echo $myPager->showNAV(); # show paging nav, only if enough records
-	}else{#no records
-		echo "<div align=center>What! No surveys?  There must be a mistake!!</div>";
-	}
-*/
-
-
-
-
-	@mysqli_free_result($result);
 
 	get_footer(); #defaults to theme footer or footer_inc.php
 
