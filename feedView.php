@@ -23,7 +23,6 @@
 
 require '../inc_0700/config_inc.php'; #provides configuration, pathing, error handling, db
 require './_inc/common-inc.php'; #provides configuration, pathing, error handling, db
-require './_inc/aarFeeds-inc.php'; #arrays containing feeds
 
 
 spl_autoload_register('MyAutoLoader::NamespaceLoader');//required to load SurveySez namespace objects
@@ -34,34 +33,35 @@ $feed=$type=$title=$feed=$url=0;
 #dumpDie($url);
 #we will need to call the feed value from #session
 $id = $_GET['feedID']; #cast to string
-$type  = $_GET['feedType'];
-$title = $_GET['feedTitle'];
 // call array with feed data for xml obj
 
-# check variable valid? If false redirect back
-if(isset($id) && isset($type)){#proper data must be on querystring
+$url = null;
+if(isset($id)){#proper data must be on querystring
+    	# connection comes first in mysqli (improved) function
+    
+    //sql statment to select individual item  - FeedRSS. Inner join.
+    $sql = "
+    
+    select FeedRSS
+        from p3_feeds f
+        inner join p3_Categories c
+            on f.categoryID = c.categoryID
+        where FeedID = " . $id;
+    
+    //  #IDB::conn() creates a shareable database connection via a singleton class
+	$result = mysqli_query(IDB::conn(),$sql) or die(trigger_error(mysqli_error(IDB::conn()), E_USER_ERROR));
+    #there are records: process - present data
+    if(mysqli_num_rows($result) > 0) {#process each row
+        while ($row = mysqli_fetch_assoc($result)) {
+            $url = $row['FeedRSS'];
+        }
+    }
+    @mysqli_free_result($result);
 
-	switch ($type) {
-		case 'drama':
-				$url = $dramaFeed[$id];
-				break;
-		case 'fantasy':
-				$url = $fantasyFeed[$id];
-				break;
-		case 'horror':
-				$url = $horrorFeed[$id];
-				break;
-		case 'syfy':
-				$url = $syfyFeed[$id];
-				break;
 
-		default:
-				"Sorry, newsfeed unavailable";
-	}
 }else{
-	myRedirect(VIRTUAL_PATH . "./proj03newsfeed/index.php");
+	myRedirect(VIRTUAL_PATH . "./P3/index.php");
 }
-
 
 #END CONFIG AREA ----------------------------------------------------------
 
@@ -75,12 +75,8 @@ get_header(); #defaults to theme header or header_inc.php
 #dumpDie($url);
 
 if(!empty($url))
-{ #call obj build feed
-	#dumpDie($url);
-	#gt_FeedLnk($url);
-	echo 'URL GIVEN :: ' . $url . '<br /><br />';
-
-	echo mk_feed($url);
+{
+    echo mk_feed($url);
 
 }else{
 	echo "Sorry, no such feed!";
